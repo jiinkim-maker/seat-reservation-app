@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>좌석 예약</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .seats {
+            display: grid;
+            grid-template-columns: repeat(6, 70px);
+            gap: 15px;
+        }
+        .seat {
+            width: 60px;
+            height: 60px;
+            background-color: #f9f1c6;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .seat.reserved {
+            background-color: #d3d3d3;
+            cursor: not-allowed;
+        }
+        .mypage {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>좌석 예약</h1>
+        <div class="seats" id="seatContainer">
+            <!-- 좌석이 동적으로 추가됩니다 -->
+        </div>
+
+        <div class="mypage">
+            <a href="/mypage.html">마이페이지</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaQidiW6eGEUMFHdTfNny4aU3lvXcwK6g",
+            authDomain: "seat-reservation-app-3d3d0.firebaseapp.com",
+            projectId: "seat-reservation-app-3d3d0",
+            storageBucket: "seat-reservation-app-3d3d0.firebasestorage.app",
+            messagingSenderId: "621636443229",
+            appId: "1:621636443229:web:672c35274dcac276a2c1b4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+        const seatContainer = document.getElementById('seatContainer');
+
+    
+
+        // 좌석 24개 동적 생성
+        for (let i = 1; i <= 24; i++) {
+            const seat = document.createElement('div');
+            seat.classList.add('seat');
+            seat.id = `seat${i}`;
+            seat.textContent = i;
+            seatContainer.appendChild(seat);
+        }
+
+        // Firestore에서 좌석 상태 동기화
+        function loadSeats() {
+            onSnapshot(collection(db, 'seats'), (snapshot) => {
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const seatElement = document.getElementById(`seat${data.seatNumber}`);
+                    
+                    if (seatElement) {
+                        if (data.status === 'reserved') {
+                            seatElement.classList.add('reserved');
+                            seatElement.textContent = `${data.reservedBy}`;
+                        } else {
+                            seatElement.classList.remove('reserved');
+                            seatElement.textContent = data.seatNumber;
+                        }
+                    }
+                });
+            });
+        }
+
+        loadSeats();  // 좌석 상태 초기 로드 및 실시간 업데이트
+
+        // 좌석 클릭 이벤트 (예약)
+        const seats = document.querySelectorAll('.seat');
+        seats.forEach(seat => {
+            seat.addEventListener('click', async function () {
+                if (seat.classList.contains('reserved')) {
+                    alert('이미 예약된 좌석입니다.');
+                    return;
+                }
+
+                const confirmReservation = confirm(`${seat.innerText}번 좌석을 선택하셨습니다. 예약하시겠습니까?`);
+                if (confirmReservation) {
+                    const studentId = sessionStorage.getItem('studentId');
+                    const seatNumber = seat.innerText;
+
+                    // Firestore에서 좌석 상태 다시 확인
+                    const seatDoc = await getDoc(doc(db, 'seats', seatNumber));
+                    if (seatDoc.exists() && seatDoc.data().status === 'reserved') {
+                        alert('이미 다른 사용자가 예약한 좌석입니다.');
+                        loadSeats();
+                        return;
+                    }
+
+                    // Firestore에 예약 정보 저장
+                    await setDoc(doc(db, 'reservations', seatNumber), {
+                        studentId: studentId,
+                        seat: seatNumber,
+                        status: 'reserved',
+                        timestamp: new Date()
+                    });
+
+                    // 좌석 상태 업데이트
+                    await setDoc(doc(db, 'seats', seatNumber), {
+                        seatNumber: seatNumber,
+                        reservedBy: studentId,
+                        status: 'reserved'
+                    });
+
+                    alert('예약이 완료되었습니다.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

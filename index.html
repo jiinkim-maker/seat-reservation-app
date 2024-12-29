@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #fafafa;
+            font-family: 'Arial', sans-serif;
+        }
+        .login-container {
+            width: 350px;
+            padding: 40px 40px;
+            background-color: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-container h1 {
+            font-family: 'Arial', sans-serif;
+            font-size: 45px;
+            color: #3b49df; /* 파란색 */
+            margin-bottom: 10px;
+        }
+        .login-container p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .login-button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            border: none;
+            background-color: #3b49df;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-button:disabled {
+            background-color: #b2dffc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <p>Hey enter your details to sign in to your account</p>
+        <input type="text" id="studentId" class="login-input" placeholder="학번">
+        <input type="text" id="password" class="login-input" placeholder="이름">
+        <button class="login-button" onclick="login()">로그인</button>
+    </div>
+
+    <script>
+        function login() {
+            const studentId = document.getElementById('studentId').value;
+            const password = document.getElementById('password').value;
+
+            if (studentId.length !== 5) {
+                alert("학번 형식이 잘못되었습니다.");
+                return;
+            }
+
+            const classNumber = studentId.substring(2, 3);  // 반 추출
+
+            if (classNumber !== '3') {
+                alert("3반 학생이 아닙니다.");
+                return;
+            }
+
+            sessionStorage.setItem('studentId', studentId);
+            sessionStorage.setItem('name', "학생");
+
+            // 관리자 ID 확인
+            if (studentId === '10300') {
+                window.location.href = '/admin.html';
+            } else {
+                window.location.href = '/reservation.html';
+            }
+        }
+    </script>
+</body>
+</html>
+

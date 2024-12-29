@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이 페이지</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #dae9f7;
+        }
+        td {
+            background-color: #e2e6ea;
+        }
+        button {
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+        .cancel-btn {
+            background-color: #ddefff;
+            border: 1px solid #b0c4de;
+        }
+        .cancel-btn:hover {
+            background-color: #bedcff;
+        }
+        .info-text {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>마이페이지</h1>
+        <p>이름 : <span id="studentName">정보 없음</span></p>
+        <p>학번 : <span id="studentId">정보 없음</span></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>예약한 좌석 번호</th>
+                    <th>예약 신청 시각</th>
+                    <th>예약 취소</th>
+                    <th>예약 확정 여부</th>
+                </tr>
+            </thead>
+            <tbody id="reservationList">
+                <tr>
+                    <td colspan="5">예약 내역이 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-text">
+            <p>• 예약 변경을 원하는 경우, 취소 후 재예약 바랍니다.<br>
+            • 관리자가 예약을 확정 처리한 후에, ‘예약 확정 대기’ 상태에서 ‘예약 확정 완료’ 상태로 자동 변경됩니다.<br>
+            모든 예약 정보는 마이페이지에서 확인 가능합니다.</p>
+        </div>
+    </div>
+
+    <!-- Firebase 설정 및 데이터 조회 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, collection, query, where, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaQidiW6eGEUMFHdTfNny4aU3lvXcwK6g",
+            authDomain: "seat-reservation-app-3d3d0.firebaseapp.com",
+            projectId: "seat-reservation-app-3d3d0",
+            storageBucket: "seat-reservation-app-3d3d0.firebasestorage.app",
+            messagingSenderId: "621636443229",
+            appId: "1:621636443229:web:672c35274dcac276a2c1b4",
+
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 세션에서 사용자 정보 불러오기
+        const studentId = sessionStorage.getItem('studentId');
+        const studentName = sessionStorage.getItem('name');
+
+        if (studentId && studentName) {
+            document.getElementById('studentId').textContent = studentId;
+            document.getElementById('studentName').textContent = studentName;
+        } else {
+            alert('로그인 정보가 없습니다. 다시 로그인 해주세요.');
+            window.location.href = '/index.html';
+        }
+
+        // Firestore에서 실시간 예약 현황 조회
+        const reservationList = document.getElementById('reservationList');
+        const q = query(collection(db, 'reservations'), where("user", "==", studentId));
+
+        onSnapshot(q, (querySnapshot) => {
+            reservationList.innerHTML = "";
+
+            if (!querySnapshot.empty) {
+                let index = 1;
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = new Date(data.timestamp.seconds * 1000);
+                    const formattedTime = date.toLocaleString();
+
+                    const row = `
+                        <tr>
+                            <td>${index}</td>
+                            <td>${data.seat}</td>
+                            <td>${formattedTime}</td>
+                            <td><button class="cancel-btn" onclick="cancelReservation('${doc.id}')">취소</button></td>
+                            <td>${data.status}</td>
+                        </tr>`;
+                    reservationList.innerHTML += row;
+                    index++;
+                });
+            } else {
+                reservationList.innerHTML = '<tr><td colspan="5">예약 내역이 없습니다.</td></tr>';
+            }
+        });
+
+        // 예약 취소 기능
+        window.cancelReservation = async function(reservationId) {
+            const confirmCancel = confirm("예약을 취소하시겠습니까?");
+            if (confirmCancel) {
+                await deleteDoc(doc(db, 'reservations', reservationId));
+                alert("예약이 취소되었습니다.");
+            }
+        }
+    </script>
+</body>
+</html>

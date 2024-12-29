@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예약 관리 대시보드</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .seats {
+            display: grid;
+            grid-template-columns: repeat(6, 70px);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .seat {
+            width: 60px;
+            height: 60px;
+            background-color: #f9f1c6;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+        }
+        .reserved {
+            background-color: orange;
+        }
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin-top: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #d6e9f8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>예약 관리 대시보드</h1>
+        <p>관리자 페이지 [열람 및 처리 가능]</p>
+        
+        <div class="seats" id="seatMap">
+            <!-- 좌석 상태 렌더링 -->
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>예약자 명</th>
+                    <th>예약한 좌석 번호</th>
+                    <th>예약 신청 시각</th>
+                    <th>예약 현황</th>
+                    <th>예약 확정 여부</th>
+                </tr>
+            </thead>
+            <tbody id="reservationList">
+                <!-- 예약 리스트 렌더링 -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const db = firebase.firestore();
+
+        // 좌석 상태 불러오기
+        db.collection('seats').get().then(snapshot => {
+            const seatMap = document.getElementById('seatMap');
+            snapshot.forEach(doc => {
+                const seat = doc.data();
+                const seatElement = document.createElement('div');
+                seatElement.classList.add('seat');
+                seatElement.textContent = seat.seatNumber;
+
+                if (seat.status !== 'available') {
+                    seatElement.classList.add('reserved');
+                    seatElement.textContent = seat.reservedBy;
+                }
+                seatMap.appendChild(seatElement);
+            });
+        });
+
+        // 예약 내역 불러오기
+        db.collection('reservations').get().then(snapshot => {
+            const reservationList = document.getElementById('reservationList');
+            let index = 1;
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${index++}</td>
+                    <td>${data.name}</td>
+                    <td>${data.seat}</td>
+                    <td>${data.timestamp.toDate().toLocaleString()}</td>
+                    <td>${data.status === 'confirmed' ? '예약 확정' : '예약 확정 대기'}</td>
+                    <td>
+                        ${data.status === 'pending' ? `<button onclick="confirmReservation('${doc.id}')">확정 처리</button>` : ''}
+                    </td>
+                `;
+                reservationList.appendChild(row);
+            });
+        });
+
+        // 예약 확정 처리
+        function confirmReservation(reservationId) {
+            db.collection('reservations').doc(reservationId).update({
+                status: 'confirmed'
+            }).then(() => {
+                alert('예약이 확정되었습니다.');
+                location.reload();  // 페이지 새로고침
+            });
+        }
+    </script>
+
+    <!-- Firebase SDK 추가 -->
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore-compat.js"></script>
+    <script src="/firebaseConfig.js"></script>
+</body>
+</html>

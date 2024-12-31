@@ -5,51 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예약 관리 대시보드</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;  /* 예약 페이지와 동일한 배경 */
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            margin: 0;
+        }
+
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin-top: 50px;
+            width: 80%;
+            background-color: #1c1c1c;  /* 대시보드 배경 */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
+
+        .container h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            color: #bd4e57;
+            margin-bottom: 30px;
+        }
+
+        .container p {
+            font-size: 23px;
+            color: #b3b3b3;
+            margin-bottom: 35px;
+        }
+
         .seats {
             display: grid;
             grid-template-columns: repeat(6, 70px);
             gap: 15px;
             margin-bottom: 30px;
         }
+
         .seat {
             width: 60px;
             height: 60px;
-            background-color: #f9f1c6;
-            border: 1px solid #ccc;
+            background-color: #333;
+            border: 2px solid #555;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 16px;
+            border-radius: 5px;
+            color: #fff;
         }
+
         .reserved {
-            background-color: orange;
+            background-color: #bd4e57;  /* 예약된 좌석 - 붉은색 강조 */
+            color: white;
+            font-weight: bold;
         }
+
         table {
             border-collapse: collapse;
-            width: 80%;
+            width: 100%;
             margin-top: 30px;
+            background-color: #222;
+            border-radius: 10px;
+            overflow: hidden;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
+            border: 1px solid #444;
+            padding: 15px;
             text-align: center;
+            color: #ddd;
         }
+
         th {
-            background-color: #d6e9f8;
+            background-color: #333;
         }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #bd4e57;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 40px;
+        }
+
+        button:hover {
+            background-color: #bd4e57;
+            
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>예약 관리 대시보드</h1>
-        <p>관리자 페이지 [열람 및 처리 가능]</p>
-        
+        <p>관리자 전용 페이지 [열람 및 처리 가능]</p>
+        <button class="cancel-all-btn" onclick="cancelAllReservations()">모든 예약 취소</button>
         <div class="seats" id="seatMap">
             <!-- 좌석 상태 렌더링 -->
         </div>
@@ -71,14 +133,32 @@
         </table>
     </div>
 
-    <script>
-        const db = firebase.firestore();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
 
-        // 좌석 상태 불러오기
-        db.collection('seats').get().then(snapshot => {
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaQidiW6eGEUMFHdTfNny4aU3lvXcwK6g",
+            authDomain: "seat-reservation-app-3d3d0.firebaseapp.com",
+            projectId: "seat-reservation-app-3d3d0",
+            storageBucket: "seat-reservation-app-3d3d0.firebasestorage.app",
+            messagingSenderId: "621636443229",
+            appId: "1:621636443229:web:672c35274dcac276a2c1b4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadSeats() {
             const seatMap = document.getElementById('seatMap');
-            snapshot.forEach(doc => {
-                const seat = doc.data();
+            seatMap.innerHTML = '';  // 기존 좌석 초기화
+
+            const snapshot = await getDocs(collection(db, 'seats'));
+            const sortedSeats = snapshot.docs
+                .map(doc => doc.data())
+                .sort((a, b) => a.seatNumber - b.seatNumber);  // seatNumber 기준으로 정렬
+
+            sortedSeats.forEach(seat => {
                 const seatElement = document.createElement('div');
                 seatElement.classList.add('seat');
                 seatElement.textContent = seat.seatNumber;
@@ -89,12 +169,14 @@
                 }
                 seatMap.appendChild(seatElement);
             });
-        });
+        }
 
-        // 예약 내역 불러오기
-        db.collection('reservations').get().then(snapshot => {
+
+
+        async function loadReservations() {
             const reservationList = document.getElementById('reservationList');
             let index = 1;
+            const snapshot = await getDocs(collection(db, 'reservations'));
 
             snapshot.forEach(doc => {
                 const data = doc.data();
@@ -105,29 +187,58 @@
                     <td>${data.name}</td>
                     <td>${data.seat}</td>
                     <td>${data.timestamp.toDate().toLocaleString()}</td>
-                    <td>${data.status === 'confirmed' ? '예약 확정' : '예약 확정 대기'}</td>
+                    <td>${data.status === 'confirmed' ? '확정' : '대기 중'}</td>
                     <td>
-                        ${data.status === 'pending' ? `<button onclick="confirmReservation('${doc.id}')">확정 처리</button>` : ''}
+                        ${data.status === 'pending' ? `<button onclick="confirmReservation('${doc.id}')">확정</button>` : ''}
                     </td>
                 `;
                 reservationList.appendChild(row);
             });
-        });
-
-        // 예약 확정 처리
-        function confirmReservation(reservationId) {
-            db.collection('reservations').doc(reservationId).update({
-                status: 'confirmed'
-            }).then(() => {
-                alert('예약이 확정되었습니다.');
-                location.reload();  // 페이지 새로고침
-            });
         }
-    </script>
 
-    <!-- Firebase SDK 추가 -->
-    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore-compat.js"></script>
-    <script src="/firebaseConfig.js"></script>
+
+        async function cancelAllReservations() {
+            const confirmCancel = confirm("정말로 모든 예약을 취소하시겠습니까?");
+            if (!confirmCancel) return;
+
+            try {
+                const reservationsSnapshot = await getDocs(collection(db, 'reservations'));
+                
+                const batch = writeBatch(db);
+                reservationsSnapshot.forEach(doc => {
+                    const reservation = doc.data();
+                    
+                    // 예약 삭제 (reservations 컬렉션)
+                    batch.delete(doc.ref);
+                    
+                    // 좌석 상태 초기화 (seats 컬렉션)
+                    const seatRef = doc(db, 'seats', reservation.seat.toString());
+                    batch.update(seatRef, {
+                        reservedBy: '',
+                        status: 'available'
+                    });
+                });
+
+                await batch.commit();
+                alert("모든 예약이 취소되었습니다.");
+                location.reload();  // 페이지 새로고침
+            } catch (error) {
+                console.error("예약 취소 중 오류 발생:", error);
+                alert("예약 취소에 실패했습니다.");
+            }
+        }
+
+
+        window.confirmReservation = async function(reservationId) {
+            await updateDoc(doc(db, 'reservations', reservationId), {
+                status: 'confirmed'
+            });
+            alert('예약이 확정되었습니다.');
+            location.reload();
+        };
+
+        loadSeats();
+        loadReservations();
+    </script>
 </body>
 </html>

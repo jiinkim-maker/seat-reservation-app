@@ -181,46 +181,56 @@
         /* ========== 반응형 디자인 (모바일) ========== */
         @media (max-width: 768px) {
             h1 {
-                font-size: 2rem;  /* 작은 화면에서는 폰트 크기 축소 */
+                font-size: 1.8rem;  /* 작은 화면에서는 폰트 크기 축소 */
             }
             .screen {
-                width: 90%;
-                height: 40px;
-            }
-            .seats {
-                grid-template-columns: repeat(4, 1fr);  /* 모바일에서는 4열 */
-                gap: 10px;
-            }
-            .seat {
-                width: 35px;
+                width: 95%;
                 height: 35px;
                 font-size: 1rem;
             }
+            .seats {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);  /* 모바일에서는 4열 */
+                gap: 10px;
+                justify-content: center;
+                transform: scale(0.8);  /* 화면을 축소하여 맞춤 */
+                transform-origin: top center;  /* 화면 중앙 기준으로 축소 */
+            }
+            .seat {
+                width: 30px;
+                height: 30px;
+                font-size: 1rem;
+            }
             .legend-item {
-                font-size: 0.9rem;  /* 상태 안내 폰트 축소 */
+                font-size: 0.7rem;  /* 상태 안내 폰트 축소 */
             }
             .footer-container {
-                height: 120px;
-                min-height: 120px;
+                height: 100px;
+                min-height: 100px;
             }
         }
 
         @media (max-width: 480px) {
             h1 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
+            }
+            .screen {
+                height: 30px;
+                font-size: 0.8rem;
             }
             .seats {
-                grid-template-columns: repeat(4, 1fr);  /* 더 작은 화면에서는 3열 */
-                gap: 6px;
+                transform: scale(0.7);  
+                gap: 4px;
+                transform-origin: top center;
             }
             .seat {
                 width: 30px;
                 height: 30px;
-                font-size: 0.9rem;
+                font-size: 0.8rem;
             }
             .footer-container {
-                height: 100px;
-                min-height: 100px;
+                height: 80px;
+                min-height: 80px;
             }
         }
 

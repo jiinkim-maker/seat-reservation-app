@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #fafafa;
-            font-family: 'Arial', sans-serif;
+            background-color: #1c1c1c;
+            font-family: 'Poppins', sans-serif;
         }
         .login-container {
             width: 350px;
@@ -23,9 +24,9 @@
             text-align: center;
         }
         .login-container h1 {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Poppins', sans-serif;
             font-size: 45px;
-            color: #3b49df; /* 파란색 */
+            color: #c6434e;
             margin-bottom: 10px;
         }
         .login-container p {
@@ -47,7 +48,7 @@
             padding: 10px;
             margin-top: 20px;
             border: none;
-            background-color: #3b49df;
+            background-color: #c6434e;
             color: white;
             font-weight: bold;
             border-radius: 5px;
@@ -62,14 +63,30 @@
 <body>
     <div class="login-container">
         <h1>Login</h1>
-        <p>Hey enter your details to sign in to your account</p>
+        <p>본인의 학번과 이름을 정확히 입력해주세요.</p>
         <input type="text" id="studentId" class="login-input" placeholder="학번">
         <input type="text" id="password" class="login-input" placeholder="이름">
         <button class="login-button" onclick="login()">로그인</button>
     </div>
 
-    <script>
-        function login() {
+    <!-- Firebase SDK 추가 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaQidiW6eGEUMFHdTfNny4aU3lvXcwK6g",
+            authDomain: "seat-reservation-app-3d3d0.firebaseapp.com",
+            projectId: "seat-reservation-app-3d3d0",
+            storageBucket: "seat-reservation-app-3d3d0.firebasestorage.app",
+            messagingSenderId: "621636443229",
+            appId: "1:621636443229:web:672c35274dcac276a2c1b4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.login = async function() {
             const studentId = document.getElementById('studentId').value;
             const password = document.getElementById('password').value;
 
@@ -86,7 +103,22 @@
             }
 
             sessionStorage.setItem('studentId', studentId);
-            sessionStorage.setItem('name', "학생");
+            sessionStorage.setItem('name', password);
+
+            // Firestore에 사용자 등록
+            const userRef = doc(db, 'users', studentId);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                await setDoc(userRef, {
+                    studentId: studentId,
+                    name: password,
+                    role: studentId === '10300' ? 'admin' : 'student'
+                });
+                console.log('Firestore에 사용자 정보 추가됨');
+            } else {
+                console.log('이미 등록된 사용자입니다.');
+            }
 
             // 관리자 ID 확인
             if (studentId === '10300') {
@@ -94,8 +126,7 @@
             } else {
                 window.location.href = '/reservation.html';
             }
-        }
+        };
     </script>
 </body>
 </html>
-

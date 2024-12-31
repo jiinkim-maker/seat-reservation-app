@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>좌석 예약</title>
     <link rel="stylesheet" href="styles.css">
 
@@ -177,6 +177,51 @@
         }
         .reservation-info p {
             margin: 5px 0;
+        }
+        /* ========== 반응형 디자인 (모바일) ========== */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;  /* 작은 화면에서는 폰트 크기 축소 */
+            }
+            .screen {
+                width: 90%;
+                height: 40px;
+            }
+            .seats {
+                grid-template-columns: repeat(4, 1fr);  /* 모바일에서는 4열 */
+                gap: 10px;
+            }
+            .seat {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            .legend-item {
+                font-size: 0.9rem;  /* 상태 안내 폰트 축소 */
+            }
+            .footer-container {
+                height: 120px;
+                min-height: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .seats {
+                grid-template-columns: repeat(4, 1fr);  /* 더 작은 화면에서는 3열 */
+                gap: 6px;
+            }
+            .seat {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+            .footer-container {
+                height: 100px;
+                min-height: 100px;
+            }
         }
 
 
@@ -468,3 +513,4 @@ function updateTicket(seatNumber, timestamp) {
 
 </body>
 </html>
+

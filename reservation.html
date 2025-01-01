@@ -166,13 +166,6 @@
             border-radius: 60px 60px 0 0;
             transition: height 0.1s ease;
             min-height: 150px;  /* 최소 높이 설정 */
-            max-height: 300px;  /* 최대 높이 설정 */
-            resize: vertical;  /* 드래그로 높이 조절 가능 */
-            overflow: auto;  /* 내용이 넘칠 경우 스크롤 허용 */
-            touch-action: auto;  /* 터치 동작 활성화 */
-            -webkit-overflow-scrolling: touch;  /* iOS에서 부드러운 스크롤 */
-
-
         }
         .footer-container:hover {
             cursor: ns-resize;  /* 마우스를 올리면 드래그 표시 */
@@ -240,9 +233,6 @@
             .footer-container {
                 height: 120px;
                 min-height: 80px;
-                touch-action: pan-y;  /* 수직 드래그만 허용 */
-                resize: none;  /* 모바일에서는 드래그 크기 조정 비활성화 */
-
             }
         }
 

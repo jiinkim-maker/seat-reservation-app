@@ -166,6 +166,12 @@
             border-radius: 60px 60px 0 0;
             transition: height 0.1s ease;
             min-height: 150px;  /* 최소 높이 설정 */
+            max-height: 300px;  /* 최대 높이 설정 */
+            resize: vertical;  /* 드래그로 높이 조절 가능 */
+            overflow: auto;  /* 내용이 넘칠 경우 스크롤 허용 */
+            touch-action: auto;  /* 터치 동작 활성화 */
+            -webkit-overflow-scrolling: touch;  /* iOS에서 부드러운 스크롤 */
+
 
         }
         .footer-container:hover {
@@ -207,6 +213,9 @@
             .footer-container {
                 height: 100px;
                 min-height: 100px;
+                touch-action: pan-y;  /* 수직 드래그만 허용 */
+                resize: none;  /* 모바일에서는 드래그 크기 조정 비활성화 */
+
             }
         }
 
@@ -231,6 +240,9 @@
             .footer-container {
                 height: 120px;
                 min-height: 80px;
+                touch-action: pan-y;  /* 수직 드래그만 허용 */
+                resize: none;  /* 모바일에서는 드래그 크기 조정 비활성화 */
+
             }
         }
 
@@ -497,26 +509,46 @@ function updateTicket(seatNumber, timestamp) {
                 }
             });
         });
-        document.addEventListener('DOMContentLoaded', () => {
-            const footer = document.getElementById('footerContainer');
-            let isDragging = false;
-
-            footer.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                document.body.style.userSelect = 'none';
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const newHeight = window.innerHeight - e.clientY;
-                footer.style.height = `${Math.max(150, newHeight)}px`;  // 최소 높이 150px
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                document.body.style.userSelect = 'auto';
-            });
+        footer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startY = e.clientY;
+            startHeight = parseInt(getComputedStyle(footer).height, 10);
+            document.body.style.userSelect = 'none';
         });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const moveY = e.clientY - startY;
+            const newHeight = startHeight - moveY;
+            footer.style.height = `${Math.max(150, newHeight)}px`;
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            document.body.style.userSelect = 'auto';
+        });
+        
+        // 모바일 터치 이벤트
+        footer.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startHeight = parseInt(getComputedStyle(footer).height, 10);
+            footer.style.transition = 'none';
+        });
+        
+        footer.addEventListener('touchmove', (e) => {
+            const moveY = e.touches[0].clientY - startY;
+            const newHeight = startHeight - moveY;
+        
+            if (newHeight >= 100 && newHeight <= 300) {
+                footer.style.height = `${newHeight}px`;
+            }
+        });
+        
+        footer.addEventListener('touchend', () => {
+            footer.style.transition = 'height 0.2s ease';
+        });
+
+    });
 
 
     </script>

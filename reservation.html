@@ -511,41 +511,18 @@ function updateTicket(seatNumber, timestamp) {
         });
         footer.addEventListener('mousedown', (e) => {
             isDragging = true;
-            startY = e.clientY;
-            startHeight = parseInt(getComputedStyle(footer).height, 10);
             document.body.style.userSelect = 'none';
         });
         
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const moveY = e.clientY - startY;
-            const newHeight = startHeight - moveY;
+            const newHeight = window.innerHeight - e.clientY;
             footer.style.height = `${Math.max(150, newHeight)}px`;
         });
         
         document.addEventListener('mouseup', () => {
             isDragging = false;
             document.body.style.userSelect = 'auto';
-        });
-        
-        // 모바일 터치 이벤트
-        footer.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-            startHeight = parseInt(getComputedStyle(footer).height, 10);
-            footer.style.transition = 'none';
-        });
-        
-        footer.addEventListener('touchmove', (e) => {
-            const moveY = e.touches[0].clientY - startY;
-            const newHeight = startHeight - moveY;
-        
-            if (newHeight >= 100 && newHeight <= 300) {
-                footer.style.height = `${newHeight}px`;
-            }
-        });
-        
-        footer.addEventListener('touchend', () => {
-            footer.style.transition = 'height 0.2s ease';
         });
 
     });

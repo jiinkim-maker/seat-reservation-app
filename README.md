@@ -1,5 +1,5 @@
-# seat-reservation-app
-# 🎟️ 좌석 예약 프로그램 (Seat Reservation Program)  
+# 🎟️ seat-reservation-app
+# 🎟 좌석 예약 프로그램 (Seat Reservation Program)  
 
 ## 📅 프로젝트 개요  
 이 프로젝트는 사용자들이 웹 또는 모바일 환경에서 좌석을 예약하고 관리할 수 있는 **좌석 예약 시스템**입니다.  
